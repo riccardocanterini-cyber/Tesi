@@ -144,15 +144,15 @@ class DoubleVoigtFit:
         return
     
 class DoubleVoigtFit2:
-    def __init__(self, mass, fit_values, exclude_mass=[50], ax=None, color=None):
+    def __init__(self, mass, fit_values, exclude_mass=50, ax=None, color=None):
         self.mass = mass
         self.ax = ax
         self.color = color
         
         self.param_names = ["norm", "mu", "sigma", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
         
-        exclude_keys = [f"MH{m}" for m in exclude_mass]
-        cleaned_data = {float(k.replace("MH", "")): params for k, params in fit_values.items() if str(k).startswith("MH") and k not in exclude_keys}
+        exclude_key = f"MH{exclude_mass}"
+        cleaned_data = {float(k.replace("MH", "")): params for k, params in fit_values.items() if str(k).startswith("MH") and k != exclude_key}
 
         self.masse = sorted(cleaned_data.keys())
 
@@ -167,7 +167,7 @@ class DoubleVoigtFit2:
     
     def grafico(self):
         fit_params = self.get_fit_parameters()
-        x = np.linspace(0, 250, 300)  
+        x = np.linspace(0, 250, 300)
         
        
         args_for_voigt = [fit_params[p] for p in self.param_names]
@@ -182,84 +182,3 @@ class DoubleVoigtFit2:
         ax.legend()
         ax.grid(True)
 
-
-
-class DoubleVoigtFit3:
-    def __init__(self, mass, fit_values, exclude_mass=[50], ax=None, color=None):
-        self.mass = mass
-        self.ax = ax
-        self.color = color
-        
-        self.param_names = ["norm", "mu", "sigma", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
-        
-        # CORREZIONE: Convertiamo exclude_mass in float per un confronto matematico sicuro
-        exclude_mass_floats = [float(m) for m in exclude_mass]
-        
-        cleaned_data = {}
-        for k, params in fit_values.items():
-            k_str = str(k)
-            if k_str.startswith("MH"):
-                mass_val = float(k_str.replace("MH", ""))
-                # Escludiamo controllando il valore numerico (es. 100.0 == 100)
-                if mass_val not in exclude_mass_floats:
-                    cleaned_data[mass_val] = params
-
-        self.masse = sorted(cleaned_data.keys())
-
-        # Estraiamo i parametri
-        self.y_params = np.array([[cleaned_data[m][p] for m in self.masse] for p in self.param_names])
-
-    def get_fit_parameters(self):
-        interpolator = interp1d(self.masse, self.y_params, kind='linear', fill_value='extrapolate')
-        interpolated_values = interpolator(self.mass)
-        return dict(zip(self.param_names, interpolated_values))
-    
-    # Aggiunti argomenti opzionali per stile e trasparenza
-    def grafico(self, linestyle='-', alpha=1.0):
-        fit_params = self.get_fit_parameters()
-        x = np.linspace(0, 250, 300)
-        
-        args_for_voigt = [fit_params[p] for p in self.param_names]
-        
-        # Nota: assicurati che la funzione voigt2 sia definita o importata correttamente nel tuo script!
-        y = voigt2(x, *args_for_voigt) 
-        
-        ax = self.ax if self.ax is not None else plt.subplots(figsize=(10, 6))[1]
-            
-        ax.plot(x, y, label=f'Curva (Massa {self.mass})', color=self.color, linestyle=linestyle, alpha=alpha)
-        
-        #ax.set_title(f'Interpolazione per la Massa {self.mass}') # Meglio non usare set_title in un loop che usa un solo asse (sovrascrive il titolo n volte)
-
-
-
-class DoubleVoigtFit3Validato(DoubleVoigtFit3):
-    def __init__(self, mass, fit_values, exclude_mass=[50], ax=None, color=None):
-        # Inizializza usando il costruttore della classe padre
-        super().__init__(mass, fit_values, exclude_mass, ax, color)
-
-    def get_punti_distribuzione(self, x_punti):
-        """
-        Restituisce i punti (y) della distribuzione calcolata con i parametri interpolati.
-        """
-        # 1. Recupera i parametri interpolati per la massa scelta
-        fit_params = self.get_fit_parameters()
-        
-        # 2. Ordina gli argomenti per darli in pasto a voigt2
-        args_for_voigt = [fit_params[p] for p in self.param_names]
-        
-        # 3. Genera e restituisce la curva y
-        y_interpolati = voigt2(x_punti, *args_for_voigt)
-        return y_interpolati
-
-    def calcola_scarto_quadratico(self, x_punti, y_veri):
-        """
-        Calcola MSE e RMSE confrontando la distribuzione reale con quella interpolata.
-        """
-        # Usa il metodo appena definito per ottenere i punti previsti
-        y_predetti = self.get_punti_distribuzione(x_punti)
-        
-        # Calcola l'errore
-        mse = np.mean((y_veri - y_predetti) ** 2)
-        rmse = np.sqrt(mse)
-        
-        return mse, rmse, y_predetti

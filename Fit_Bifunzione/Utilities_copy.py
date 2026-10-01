@@ -103,21 +103,21 @@ class DoubleVoigtFit:
 
     def get_fit_parameters(self):
         # Interpoliamo i parametri per la massa specificata
-        norm_interp = interp1d(self.masse, [fit["norm"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
+        norm_interp = interp1d(self.masse, [fit["norm1"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
         norm2_interp = interp1d(self.masse, [fit["norm2"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
-        mu_interp = interp1d(self.masse, [fit["mu"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
+        mu_interp = interp1d(self.masse, [fit["mu1"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
         mu2_interp = interp1d(self.masse, [fit["mu2"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
-        sigma_interp = interp1d(self.masse, [fit["sigma"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
+        sigma_interp = interp1d(self.masse, [fit["sigma1"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
         sigma2_interp = interp1d(self.masse, [fit["sigma2"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
         gamma_interp = interp1d(self.masse, [fit["gamma"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
         gamma2_interp = interp1d(self.masse, [fit["gamma2"] for fit in self.fit_values.values()], kind='linear', fill_value='extrapolate')
 
         return {
-            "norm": norm_interp(self.mass),
+            "norm1": norm_interp(self.mass),
             "norm2": norm2_interp(self.mass),
-            "mu": mu_interp(self.mass),
+            "mu1": mu_interp(self.mass),
             "mu2": mu2_interp(self.mass),
-            "sigma": sigma_interp(self.mass),
+            "sigma1": sigma_interp(self.mass),
             "sigma2": sigma2_interp(self.mass),
             "gamma": gamma_interp(self.mass),
             "gamma2": gamma2_interp(self.mass)
@@ -126,7 +126,7 @@ class DoubleVoigtFit:
     def grafico(self, ax=None, color=None):
         fit_parameters = self.get_fit_parameters()
         x = np.linspace(0, 250, 300)
-        y = voigt2(x, fit_parameters["norm"], fit_parameters["mu"], fit_parameters["sigma"], fit_parameters["gamma"], fit_parameters["norm2"], 
+        y = voigt2(x, fit_parameters["norm1"], fit_parameters["mu1"], fit_parameters["sigma1"], fit_parameters["gamma"], fit_parameters["norm2"], 
                    fit_parameters["mu2"], fit_parameters["sigma2"], fit_parameters["gamma2"])
         
         
@@ -149,7 +149,7 @@ class DoubleVoigtFit2:
         self.ax = ax
         self.color = color
         
-        self.param_names = ["norm", "mu", "sigma", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
+        self.param_names = ["norm1", "mu1", "sigma1", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
         
         exclude_keys = [f"MH{m}" for m in exclude_mass]
         cleaned_data = {float(k.replace("MH", "")): params for k, params in fit_values.items() if str(k).startswith("MH") and k not in exclude_keys}
@@ -190,7 +190,7 @@ class DoubleVoigtFit3:
         self.ax = ax
         self.color = color
         
-        self.param_names = ["norm", "mu", "sigma", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
+        self.param_names = ["norm1", "mu1", "sigma1", "gamma", "norm2", "mu2", "sigma2", "gamma2"]
         
         # CORREZIONE: Convertiamo exclude_mass in float per un confronto matematico sicuro
         exclude_mass_floats = [float(m) for m in exclude_mass]
